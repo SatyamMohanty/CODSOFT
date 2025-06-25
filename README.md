@@ -39,5 +39,3 @@ A simple recommendation engine that suggests items to users based on collaborati
 
 ---
 
-## 📁 Folder Structure
-
