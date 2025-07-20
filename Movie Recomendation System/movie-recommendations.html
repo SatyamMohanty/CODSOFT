@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineAI - Movie Recommendations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid #e50914;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e50914;
+            display: inline-block;
+            background: linear-gradient(45deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
+        }
+
+        .hero {
+            padding: 3rem 2rem;
+            text-align: center;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6));
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .preferences-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preferences-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #e50914;
+        }
+
+        .genre-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .genre-card {
+            background: linear-gradient(135deg, rgba(229, 9, 20, 0.2), rgba(255, 107, 107, 0.1));
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .genre-card:hover {
+            transform: translateY(-5px);
+            border-color: #e50914;
+            box-shadow: 0 10px 30px rgba(229, 9, 20, 0.3);
+        }
+
+        .genre-card.selected {
+            background: linear-gradient(135deg, #e50914, #ff6b6b);
+            border-color: #fff;
+            transform: translateY(-3px);
+        }
+
+        .rating-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .rating-selector label {
+            font-size: 1.1rem;
+        }
+
+        .rating-selector select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+
+        .get-recommendations-btn {
+            display: block;
+            margin: 2rem auto;
+            background: linear-gradient(45deg, #e50914, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .get-recommendations-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(229, 9, 20, 0.6);
+        }
+
+        .recommendations {
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #e50914;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #e50914, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .movie-info {
+            padding: 1.5rem;
+        }
+
+        .movie-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .movie-genres {
+            color: #e50914;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .movie-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stars {
+            color: #ffd700;
+        }
+
+        .movie-description {
+            opacity: 0.8;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .match-score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(229, 9, 20, 0.9);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .movie-card {
+            position: relative;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e50914;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .genre-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .movie-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎬 CineAI</div>
+    </header>
+
+    <section class="hero">
+        <h1>Discover Your Next Favorite Movie</h1>
+        <p>Our AI-powered recommendation system analyzes your preferences to suggest movies you'll love</p>
+    </section>
+
+    <section class="preferences-section">
+        <h2 class="preferences-title">Tell us what you like</h2>
+        
+        <div class="genre-grid" id="genreGrid">
+            <!-- Genres will be populated by JavaScript -->
+        </div>
+
+        <div class="rating-selector">
+            <label for="minRating">Minimum Rating:</label>
+            <select id="minRating">
+                <option value="0">Any Rating</option>
+                <option value="6">6.0+</option>
+                <option value="7">7.0+</option>
+                <option value="8">8.0+</option>
+                <option value="9">9.0+</option>
+            </select>
+        </div>
+
+        <button class="get-recommendations-btn" onclick="getRecommendations()">
+            Get My Recommendations
+        </button>
+    </section>
+
+    <section class="recommendations" id="recommendationsSection">
+        <h2 class="section-title">Recommended for You</h2>
+        <div id="loadingIndicator" class="loading hidden">Finding perfect matches...</div>
+        <div class="movie-grid" id="movieGrid">
+            <!-- Recommendations will be populated here -->
+        </div>
+    </section>
+
+    <script>
+        // Movie database with enhanced features for AI-based recommendations
+        const movieDatabase = [
+            {
+                id: 1,
+                title: "The Dark Knight",
+                genres: ["Action", "Crime", "Drama"],
+                rating: 9.0,
+                year: 2008,
+                description: "Batman faces the Joker in a psychological battle for Gotham's soul.",
+                features: {
+                    themes: ["justice", "chaos", "morality", "heroism"],
+                    mood: ["dark", "intense", "psychological"],
+                    complexity: "high",
+                    pacing: "fast"
+                }
+            },
+            {
+                id: 2,
+                title: "Inception",
+                genres: ["Sci-Fi", "Thriller", "Action"],
+                rating: 8.8,
+                year: 2010,
+                description: "A thief enters dreams to plant an idea in someone's mind.",
+                features: {
+                    themes: ["dreams", "reality", "consciousness", "heist"],
+                    mood: ["cerebral", "complex", "mind-bending"],
+                    complexity: "very high",
+                    pacing: "medium"
+                }
+            },
+            {
+                id: 3,
+                title: "The Shawshank Redemption",
+                genres: ["Drama"],
+                rating: 9.3,
+                year: 1994,
+                description: "Hope and friendship bloom in the most unlikely place - prison.",
+                features: {
+                    themes: ["hope", "friendship", "redemption", "perseverance"],
+                    mood: ["uplifting", "emotional", "inspiring"],
+                    complexity: "medium",
+                    pacing: "slow"
+                }
+            },
+            {
+                id: 4,
+                title: "Pulp Fiction",
+                genres: ["Crime", "Drama"],
+                rating: 8.9,
+                year: 1994,
+                description: "Interconnected stories of crime and redemption in Los Angeles.",
+                features: {
+                    themes: ["crime", "redemption", "violence", "dialogue"],
+                    mood: ["stylistic", "quirky", "violent"],
+                    complexity: "high",
+                    pacing: "medium"
+                }
+            },
+            {
+                id: 5,
+                title: "Avatar",
+                genres: ["Sci-Fi", "Adventure", "Action"],
+                rating: 7.8,
+                year: 2009,
+                description: "A marine discovers a new world and fights to protect it.",
+                features: {
+                    themes: ["nature", "colonialism", "technology", "spirituality"],
+                    mood: ["epic", "visual", "adventurous"],
+                    complexity: "medium",
+                    pacing: "fast"
+                }
+            },
+            {
+                id: 6,
+                title: "The Godfather",
+                genres: ["Crime", "Drama"],
+                rating: 9.2,
+                year: 1972,
+                description: "The patriarch of a crime family transfers control to his reluctant son.",
+                features: {
+                    themes: ["family", "power", "loyalty", "corruption"],
+                    mood: ["epic", "dramatic", "classic"],
+                    complexity: "high",
+                    pacing: "slow"
+                }
+            },
+            {
+                id: 7,
+                title: "Interstellar",
+                genres: ["Sci-Fi", "Drama", "Adventure"],
+                rating: 8.6,
+                year: 2014,
+                description: "A father travels through space and time to save humanity.",
+                features: {
+                    themes: ["love", "sacrifice", "science", "time"],
+                    mood: ["emotional", "epic", "scientific"],
+                    complexity: "very high",
+                    pacing: "slow"
+                }
+            },
+            {
+                id: 8,
+                title: "The Matrix",
+                genres: ["Sci-Fi", "Action"],
+                rating: 8.7,
+                year: 1999,
+                description: "A hacker discovers reality is a computer simulation.",
+                features: {
+                    themes: ["reality", "technology", "rebellion", "philosophy"],
+                    mood: ["mind-bending", "action-packed", "revolutionary"],
+                    complexity: "high",
+                    pacing: "fast"
+                }
+            },
+            {
+                id: 9,
+                title: "Forrest Gump",
+                genres: ["Drama", "Romance"],
+                rating: 8.8,
+                year: 1994,
+                description: "A simple man's extraordinary journey through American history.",
+                features: {
+                    themes: ["love", "destiny", "simplicity", "history"],
+                    mood: ["heartwarming", "nostalgic", "emotional"],
+                    complexity: "low",
+                    pacing: "medium"
+                }
+            },
+            {
+                id: 10,
+                title: "The Lord of the Rings: The Fellowship",
+                genres: ["Fantasy", "Adventure", "Drama"],
+                rating: 8.8,
+                year: 2001,
+                description: "A hobbit begins an epic quest to destroy an evil ring.",
+                features: {
+                    themes: ["friendship", "good vs evil", "sacrifice", "journey"],
+                    mood: ["epic", "magical", "heroic"],
+                    complexity: "high",
+                    pacing: "medium"
+                }
+            },
+            {
+                id: 11,
+                title: "Titanic",
+                genres: ["Romance", "Drama"],
+                rating: 7.8,
+                year: 1997,
+                description: "A love story aboard the ill-fated ship.",
+                features: {
+                    themes: ["love", "class", "tragedy", "sacrifice"],
+                    mood: ["romantic", "tragic", "epic"],
+                    complexity: "medium",
+                    pacing: "slow"
+                }
+            },
+            {
+                id: 12,
+                title: "Gladiator",
+                genres: ["Action", "Drama", "Adventure"],
+                rating: 8.5,
+                year: 2000,
+                description: "A Roman general seeks revenge against the emperor who murdered his family.",
+                features: {
+                    themes: ["revenge", "honor", "freedom", "justice"],
+                    mood: ["epic", "heroic", "intense"],
+                    complexity: "medium",
+                    pacing: "fast"
+                }
+            }
+        ];
+
+        const genres = ["Action", "Adventure", "Comedy", "Crime", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Thriller"];
+        let selectedGenres = [];
+
+        // Initialize genre selection
+        function initializeGenres() {
+            const genreGrid = document.getElementById('genreGrid');
+            genres.forEach(genre => {
+                const genreCard = document.createElement('div');
+                genreCard.className = 'genre-card';
+                genreCard.textContent = genre;
+                genreCard.onclick = () => toggleGenre(genre, genreCard);
+                genreGrid.appendChild(genreCard);
+            });
+        }
+
+        function toggleGenre(genre, element) {
+            if (selectedGenres.includes(genre)) {
+                selectedGenres = selectedGenres.filter(g => g !== genre);
+                element.classList.remove('selected');
+            } else {
+                selectedGenres.push(genre);
+                element.classList.add('selected');
+            }
+        }
+
+        // AI-powered recommendation algorithm
+        function calculateSimilarity(movie, userPreferences) {
+            let score = 0;
+            let maxScore = 0;
+
+            // Genre matching (40% weight)
+            const genreWeight = 0.4;
+            let genreMatch = 0;
+            userPreferences.genres.forEach(genre => {
+                if (movie.genres.includes(genre)) {
+                    genreMatch += 1;
+                }
+            });
+            if (userPreferences.genres.length > 0) {
+                score += (genreMatch / userPreferences.genres.length) * genreWeight;
+            }
+            maxScore += genreWeight;
+
+            // Rating threshold (20% weight)
+            const ratingWeight = 0.2;
+            if (movie.rating >= userPreferences.minRating) {
+                score += ratingWeight;
+            }
+            maxScore += ratingWeight;
+
+            // Feature-based matching (40% weight)
+            const featureWeight = 0.4;
+            let featureScore = 0;
+
+            // Complexity preference based on selected genres
+            const complexGenres = ["Sci-Fi", "Thriller", "Crime"];
+            const userLikesComplex = userPreferences.genres.some(g => complexGenres.includes(g));
+            
+            if (userLikesComplex && (movie.features.complexity === "high" || movie.features.complexity === "very high")) {
+                featureScore += 0.5;
+            } else if (!userLikesComplex && (movie.features.complexity === "low" || movie.features.complexity === "medium")) {
+                featureScore += 0.5;
+            }
+
+            // Mood matching
+            const actionGenres = ["Action", "Adventure"];
+            const dramaGenres = ["Drama", "Romance"];
+            
+            if (userPreferences.genres.some(g => actionGenres.includes(g)) && 
+                movie.features.pacing === "fast") {
+                featureScore += 0.3;
+            }
+            
+            if (userPreferences.genres.some(g => dramaGenres.includes(g)) && 
+                movie.features.mood.includes("emotional")) {
+                featureScore += 0.3;
+            }
+
+            score += Math.min(featureScore, 1) * featureWeight;
+            maxScore += featureWeight;
+
+            return maxScore > 0 ? (score / maxScore) * 100 : 0;
+        }
+
+        function getRecommendations() {
+            const minRating = parseFloat(document.getElementById('minRating').value);
+            
+            if (selectedGenres.length === 0) {
+                alert('Please select at least one genre!');
+                return;
+            }
+
+            const userPreferences = {
+                genres: selectedGenres,
+                minRating: minRating
+            };
+
+            // Show loading
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('movieGrid').innerHTML = '';
+
+            // Simulate AI processing delay
+            setTimeout(() => {
+                const recommendations = movieDatabase
+                    .map(movie => ({
+                        ...movie,
+                        matchScore: calculateSimilarity(movie, userPreferences)
+                    }))
+                    .filter(movie => movie.matchScore > 0)
+                    .sort((a, b) => b.matchScore - a.matchScore)
+                    .slice(0, 6);
+
+                displayRecommendations(recommendations);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }, 1500);
+        }
+
+        function displayRecommendations(movies) {
+            const movieGrid = document.getElementById('movieGrid');
+            movieGrid.innerHTML = '';
+
+            if (movies.length === 0) {
+                movieGrid.innerHTML = '<p style="text-align: center; font-size: 1.2rem;">No movies found matching your preferences. Try different genres!</p>';
+                return;
+            }
+
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                
+                const stars = '★'.repeat(Math.floor(movie.rating / 2)) + '☆'.repeat(5 - Math.floor(movie.rating / 2));
+                
+                movieCard.innerHTML = `
+                    <div class="match-score">${Math.round(movie.matchScore)}% Match</div>
+                    <div class="movie-poster">🎬</div>
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-genres">${movie.genres.join(', ')}</div>
+                        <div class="movie-rating">
+                            <span class="stars">${stars}</span>
+                            <span>${movie.rating}/10</span>
+                            <span>(${movie.year})</span>
+                        </div>
+                        <div class="movie-description">${movie.description}</div>
+                    </div>
+                `;
+                
+                movieGrid.appendChild(movieCard);
+            });
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGenres();
+        });
+    </script>
+</body>
+</html>
